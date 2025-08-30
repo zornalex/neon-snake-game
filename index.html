@@ -234,14 +234,58 @@
             }
         }
 
+        class AutoAgent {
+            constructor(snake, food) {
+                this.snake = snake;
+                this.food = food;
+            }
+
+            findShortestPath() {
+                const head = this.snake.body[0];
+                const foodPos = this.food.position;
+
+                // Calculate the shortest path considering wrap-around
+                let dx = foodPos.x - head.x;
+                let dy = foodPos.y - head.y;
+
+                // Adjust for wrap-around
+                if (Math.abs(dx) > GRID_WIDTH / 2) {
+                    dx = dx > 0 ? dx - GRID_WIDTH : dx + GRID_WIDTH;
+                }
+                if (Math.abs(dy) > GRID_HEIGHT / 2) {
+                    dy = dy > 0 ? dy - GRID_HEIGHT : dy + GRID_HEIGHT;
+                }
+
+                // Prioritize movement
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    return { 
+                        x: dx > 0 ? 1 : -1, 
+                        y: 0 
+                    };
+                } else {
+                    return { 
+                        x: 0, 
+                        y: dy > 0 ? 1 : -1 
+                    };
+                }
+            }
+
+            move() {
+                const newDirection = this.findShortestPath();
+                this.snake.changeDirection(newDirection);
+            }
+        }
+
         class Game {
             constructor() {
                 this.snake = null;
                 this.food = null;
+                this.autoAgent = null;
                 this.score = 0;
                 this.highScore = localStorage.getItem('snakeHighScore') || 0;
                 this.gameOver = false;
                 this.gameSpeed = 50; // Faster game speed
+                this.autoMode = true; // Default to auto mode
                 this.setupEventListeners();
                 this.initGame();
             }
@@ -249,6 +293,7 @@
             initGame() {
                 this.snake = new Snake();
                 this.food = new Food(this.snake);
+                this.autoAgent = new AutoAgent(this.snake, this.food);
                 this.score = 0;
                 this.gameOver = false;
                 scoreElement.textContent = `Score: ${this.score}`;
@@ -261,16 +306,23 @@
                 document.addEventListener('keydown', (event) => {
                     switch(event.key) {
                         case 'ArrowUp':
+                            this.autoMode = false;
                             this.snake.changeDirection({ x: 0, y: -1 });
                             break;
                         case 'ArrowDown':
+                            this.autoMode = false;
                             this.snake.changeDirection({ x: 0, y: 1 });
                             break;
                         case 'ArrowLeft':
+                            this.autoMode = false;
                             this.snake.changeDirection({ x: -1, y: 0 });
                             break;
                         case 'ArrowRight':
+                            this.autoMode = false;
                             this.snake.changeDirection({ x: 1, y: 0 });
+                            break;
+                        case 'a':
+                            this.autoMode = !this.autoMode;
                             break;
                     }
                 });
@@ -280,6 +332,11 @@
 
             update() {
                 if (this.gameOver) return;
+
+                // Auto agent movement
+                if (this.autoMode) {
+                    this.autoAgent.move();
+                }
 
                 this.snake.move();
 
@@ -293,6 +350,7 @@
                     this.score++;
                     scoreElement.textContent = `Score: ${this.score}`;
                     this.food = new Food(this.snake);
+                    this.autoAgent = new AutoAgent(this.snake, this.food);
                 }
 
                 // Check collision
