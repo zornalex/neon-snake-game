@@ -316,10 +316,70 @@
                 this.score = 0;
                 this.highScore = localStorage.getItem('snakeHighScore') || 0;
                 this.gameOver = false;
-                this.gameSpeed = 50; // Faster game speed
+                this.gameSpeedLevels = [200, 100, 50, 25, 10]; // Slower to faster speeds
+                this.currentSpeedIndex = 2; // Default to medium speed
+                this.gameSpeed = this.gameSpeedLevels[this.currentSpeedIndex];
                 this.autoMode = true; // Default to auto mode
                 this.setupEventListeners();
+                this.createSpeedControls();
                 this.initGame();
+            }
+
+            createSpeedControls() {
+                const speedContainer = document.createElement('div');
+                speedContainer.style.display = 'flex';
+                speedContainer.style.justifyContent = 'center';
+                speedContainer.style.marginTop = '10px';
+                speedContainer.style.gap = '10px';
+
+                const speedLabel = document.createElement('span');
+                speedLabel.textContent = 'Speed:';
+                speedLabel.style.color = 'var(--text-color)';
+                speedLabel.style.fontFamily = "'Orbitron', sans-serif";
+
+                const speedUpBtn = document.createElement('button');
+                speedUpBtn.textContent = '▲';
+                speedUpBtn.style.background = 'var(--primary-color)';
+                speedUpBtn.style.color = 'var(--bg-color)';
+                speedUpBtn.style.border = 'none';
+                speedUpBtn.style.borderRadius = '5px';
+                speedUpBtn.style.cursor = 'pointer';
+
+                const speedDownBtn = document.createElement('button');
+                speedDownBtn.textContent = '▼';
+                speedDownBtn.style.background = 'var(--primary-color)';
+                speedDownBtn.style.color = 'var(--bg-color)';
+                speedDownBtn.style.border = 'none';
+                speedDownBtn.style.borderRadius = '5px';
+                speedDownBtn.style.cursor = 'pointer';
+
+                const speedDisplay = document.createElement('span');
+                speedDisplay.textContent = `${this.currentSpeedIndex + 1}`;
+                speedDisplay.style.color = 'var(--text-color)';
+                speedDisplay.style.fontFamily = "'Orbitron', sans-serif";
+
+                speedUpBtn.addEventListener('click', () => {
+                    if (this.currentSpeedIndex < this.gameSpeedLevels.length - 1) {
+                        this.currentSpeedIndex++;
+                        this.gameSpeed = this.gameSpeedLevels[this.currentSpeedIndex];
+                        speedDisplay.textContent = `${this.currentSpeedIndex + 1}`;
+                    }
+                });
+
+                speedDownBtn.addEventListener('click', () => {
+                    if (this.currentSpeedIndex > 0) {
+                        this.currentSpeedIndex--;
+                        this.gameSpeed = this.gameSpeedLevels[this.currentSpeedIndex];
+                        speedDisplay.textContent = `${this.currentSpeedIndex + 1}`;
+                    }
+                });
+
+                speedContainer.appendChild(speedLabel);
+                speedContainer.appendChild(speedDownBtn);
+                speedContainer.appendChild(speedDisplay);
+                speedContainer.appendChild(speedUpBtn);
+
+                document.querySelector('.game-container').appendChild(speedContainer);
             }
 
             initGame() {
