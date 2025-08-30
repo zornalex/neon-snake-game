@@ -5,58 +5,120 @@
     <title>Neon Snake</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
         :root {
-            --bg-color: #0a0a2a;
-            --snake-color: #00ff00;
-            --food-color: #ff1493;
-            --text-color: #00ffff;
+            --bg-color: linear-gradient(135deg, #0a0a2a, #1a1a3a);
+            --primary-color: #00ffff;
+            --secondary-color: #ff1493;
+            --accent-color: #00ff00;
+            --text-color: #e0e0ff;
+            --shadow-color: rgba(0, 255, 255, 0.3);
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: var(--bg-color);
-            font-family: 'Press Start 2P', cursive;
+            min-height: 100vh;
+            background: var(--bg-color);
+            font-family: 'Orbitron', sans-serif;
+            perspective: 1000px;
             overflow: hidden;
         }
+
         .game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-        }
-        canvas {
-            border: 4px solid var(--text-color);
-            border-radius: 10px;
-            box-shadow: 0 0 15px var(--text-color);
-        }
-        #score, #high-score {
-            color: var(--text-color);
-            font-size: 20px;
-            margin: 10px 0;
-            text-shadow: 0 0 10px var(--text-color);
-        }
-        #restart-btn {
-            display: none;
-            background-color: var(--text-color);
-            color: var(--bg-color);
-            border: none;
-            padding: 10px 20px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
-            border-radius: 5px;
+            background: rgba(10, 10, 42, 0.8);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 
+                0 15px 35px var(--shadow-color),
+                0 5px 15px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 255, 255, 0.2);
+            transform: rotateX(10deg);
             transition: all 0.3s ease;
         }
+
+        .game-container:hover {
+            transform: rotateX(0) scale(1.02);
+        }
+
+        canvas {
+            border: 4px solid var(--primary-color);
+            border-radius: 15px;
+            box-shadow: 
+                0 0 20px var(--primary-color),
+                0 0 40px var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        #score, #high-score {
+            color: var(--text-color);
+            font-size: 24px;
+            margin: 15px 0;
+            text-shadow: 
+                0 0 10px var(--primary-color),
+                0 0 20px var(--primary-color);
+            letter-spacing: 2px;
+        }
+
+        #restart-btn {
+            display: none;
+            background: var(--primary-color);
+            color: #0a0a2a;
+            border: none;
+            padding: 15px 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 0 15px var(--primary-color),
+                0 0 25px var(--primary-color);
+        }
+
         #restart-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px var(--text-color);
+            transform: scale(1.1) rotate(5deg);
+            background: var(--secondary-color);
+            box-shadow: 
+                0 0 25px var(--secondary-color),
+                0 0 45px var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                width: 95%;
+                padding: 15px;
+            }
+
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+
+            #score, #high-score {
+                font-size: 18px;
+            }
+
+            #restart-btn {
+                font-size: 16px;
+                padding: 12px 20px;
+            }
         }
     </style>
 </head>
