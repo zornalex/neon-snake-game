@@ -240,34 +240,66 @@
                 this.food = food;
             }
 
+            isPositionSafe(x, y) {
+                // Check if position is within grid
+                if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+                    return false;
+                }
+
+                // Check if position is on snake's body
+                return !this.snake.body.some(segment => 
+                    segment.x === x && segment.y === y
+                );
+            }
+
             findShortestPath() {
                 const head = this.snake.body[0];
                 const foodPos = this.food.position;
 
-                // Calculate the shortest path considering wrap-around
-                let dx = foodPos.x - head.x;
-                let dy = foodPos.y - head.y;
+                // Possible directions
+                const directions = [
+                    { x: 1, y: 0 },   // Right
+                    { x: -1, y: 0 },  // Left
+                    { x: 0, y: 1 },   // Down
+                    { x: 0, y: -1 }   // Up
+                ];
+
+                // Find the best direction that leads towards food and avoids snake body
+                const safePaths = directions.filter(dir => {
+                    const newX = (head.x + dir.x + GRID_WIDTH) % GRID_WIDTH;
+                    const newY = (head.y + dir.y + GRID_HEIGHT) % GRID_HEIGHT;
+                    return this.isPositionSafe(newX, newY);
+                });
+
+                if (safePaths.length === 0) {
+                    // If no safe paths, return current direction to prevent immediate death
+                    return this.snake.direction;
+                }
+
+                // Sort safe paths by proximity to food
+                return safePaths.sort((a, b) => {
+                    const distA = this.calculateDistance(
+                        { x: (head.x + a.x + GRID_WIDTH) % GRID_WIDTH, y: (head.y + a.y + GRID_HEIGHT) % GRID_HEIGHT }, 
+                        foodPos
+                    );
+                    const distB = this.calculateDistance(
+                        { x: (head.x + b.x + GRID_WIDTH) % GRID_WIDTH, y: (head.y + b.y + GRID_HEIGHT) % GRID_HEIGHT }, 
+                        foodPos
+                    );
+                    return distA - distB;
+                })[0];
+            }
+
+            calculateDistance(pos1, pos2) {
+                // Calculate shortest distance considering wrap-around
+                let dx = Math.abs(pos1.x - pos2.x);
+                let dy = Math.abs(pos1.y - pos2.y);
 
                 // Adjust for wrap-around
-                if (Math.abs(dx) > GRID_WIDTH / 2) {
-                    dx = dx > 0 ? dx - GRID_WIDTH : dx + GRID_WIDTH;
-                }
-                if (Math.abs(dy) > GRID_HEIGHT / 2) {
-                    dy = dy > 0 ? dy - GRID_HEIGHT : dy + GRID_HEIGHT;
-                }
+                dx = Math.min(dx, GRID_WIDTH - dx);
+                dy = Math.min(dy, GRID_HEIGHT - dy);
 
-                // Prioritize movement
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    return { 
-                        x: dx > 0 ? 1 : -1, 
-                        y: 0 
-                    };
-                } else {
-                    return { 
-                        x: 0, 
-                        y: dy > 0 ? 1 : -1 
-                    };
-                }
+                return dx + dy;
             }
 
             move() {
