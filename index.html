@@ -326,10 +326,16 @@
             }
 
             createSpeedControls() {
+                const controlsContainer = document.createElement('div');
+                controlsContainer.style.display = 'flex';
+                controlsContainer.style.justifyContent = 'center';
+                controlsContainer.style.marginTop = '10px';
+                controlsContainer.style.gap = '10px';
+
+                // Speed Controls
                 const speedContainer = document.createElement('div');
                 speedContainer.style.display = 'flex';
-                speedContainer.style.justifyContent = 'center';
-                speedContainer.style.marginTop = '10px';
+                speedContainer.style.alignItems = 'center';
                 speedContainer.style.gap = '10px';
 
                 const speedLabel = document.createElement('span');
@@ -379,7 +385,38 @@
                 speedContainer.appendChild(speedDisplay);
                 speedContainer.appendChild(speedUpBtn);
 
-                document.querySelector('.game-container').appendChild(speedContainer);
+                // Mode Controls
+                const modeContainer = document.createElement('div');
+                modeContainer.style.display = 'flex';
+                modeContainer.style.alignItems = 'center';
+                modeContainer.style.gap = '10px';
+
+                const modeLabel = document.createElement('span');
+                modeLabel.textContent = 'Mode:';
+                modeLabel.style.color = 'var(--text-color)';
+                modeLabel.style.fontFamily = "'Orbitron', sans-serif";
+
+                const modeToggleBtn = document.createElement('button');
+                modeToggleBtn.textContent = this.autoMode ? 'Auto' : 'Manual';
+                modeToggleBtn.style.background = 'var(--secondary-color)';
+                modeToggleBtn.style.color = 'var(--bg-color)';
+                modeToggleBtn.style.border = 'none';
+                modeToggleBtn.style.borderRadius = '5px';
+                modeToggleBtn.style.cursor = 'pointer';
+
+                modeToggleBtn.addEventListener('click', () => {
+                    this.autoMode = !this.autoMode;
+                    modeToggleBtn.textContent = this.autoMode ? 'Auto' : 'Manual';
+                });
+
+                modeContainer.appendChild(modeLabel);
+                modeContainer.appendChild(modeToggleBtn);
+
+                // Combine controls
+                controlsContainer.appendChild(speedContainer);
+                controlsContainer.appendChild(modeContainer);
+
+                document.querySelector('.game-container').appendChild(controlsContainer);
             }
 
             initGame() {
