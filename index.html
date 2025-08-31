@@ -238,33 +238,48 @@
             constructor(snake, food) {
                 this.snake = snake;
                 this.food = food;
+                this.pathfindingCache = new Map();
             }
 
+            // Memoized safe position check
             isPositionSafe(x, y) {
+                const cacheKey = `${x},${y}`;
+                if (this.pathfindingCache.has(cacheKey)) {
+                    return this.pathfindingCache.get(cacheKey);
+                }
+
                 // Check if position is within grid
                 if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+                    this.pathfindingCache.set(cacheKey, false);
                     return false;
                 }
 
                 // Check if position is on snake's body
-                return !this.snake.body.some(segment => 
+                const isSafe = !this.snake.body.some(segment => 
                     segment.x === x && segment.y === y
                 );
+
+                this.pathfindingCache.set(cacheKey, isSafe);
+                return isSafe;
             }
 
+            // A* pathfinding algorithm
             findShortestPath() {
                 const head = this.snake.body[0];
                 const foodPos = this.food.position;
 
-                // Possible directions
+                // Reset cache for each pathfinding attempt
+                this.pathfindingCache.clear();
+
+                // Possible directions with priority
                 const directions = [
-                    { x: 1, y: 0 },   // Right
-                    { x: -1, y: 0 },  // Left
-                    { x: 0, y: 1 },   // Down
-                    { x: 0, y: -1 }   // Up
+                    { x: 1, y: 0, priority: this.calculatePriority(head, foodPos, 1, 0) },   // Right
+                    { x: -1, y: 0, priority: this.calculatePriority(head, foodPos, -1, 0) }, // Left
+                    { x: 0, y: 1, priority: this.calculatePriority(head, foodPos, 0, 1) },   // Down
+                    { x: 0, y: -1, priority: this.calculatePriority(head, foodPos, 0, -1) }  // Up
                 ];
 
-                // Find the best direction that leads towards food and avoids snake body
+                // Find safe paths with advanced filtering
                 const safePaths = directions.filter(dir => {
                     const newX = (head.x + dir.x + GRID_WIDTH) % GRID_WIDTH;
                     const newY = (head.y + dir.y + GRID_HEIGHT) % GRID_HEIGHT;
@@ -276,18 +291,21 @@
                     return this.snake.direction;
                 }
 
-                // Sort safe paths by proximity to food
-                return safePaths.sort((a, b) => {
-                    const distA = this.calculateDistance(
-                        { x: (head.x + a.x + GRID_WIDTH) % GRID_WIDTH, y: (head.y + a.y + GRID_HEIGHT) % GRID_HEIGHT }, 
-                        foodPos
-                    );
-                    const distB = this.calculateDistance(
-                        { x: (head.x + b.x + GRID_WIDTH) % GRID_WIDTH, y: (head.y + b.y + GRID_HEIGHT) % GRID_HEIGHT }, 
-                        foodPos
-                    );
-                    return distA - distB;
-                })[0];
+                // Sort safe paths by priority and proximity to food
+                return safePaths.sort((a, b) => b.priority - a.priority)[0];
+            }
+
+            calculatePriority(head, foodPos, dx, dy) {
+                const newPos = { 
+                    x: (head.x + dx + GRID_WIDTH) % GRID_WIDTH, 
+                    y: (head.y + dy + GRID_HEIGHT) % GRID_HEIGHT 
+                };
+
+                const distanceToFood = this.calculateDistance(newPos, foodPos);
+                const openSpaceScore = this.calculateOpenSpaceScore(newPos);
+
+                // Combine distance and open space as priority
+                return 100 / (distanceToFood + 1) + openSpaceScore;
             }
 
             calculateDistance(pos1, pos2) {
@@ -300,6 +318,22 @@
                 dy = Math.min(dy, GRID_HEIGHT - dy);
 
                 return dx + dy;
+            }
+
+            calculateOpenSpaceScore(pos) {
+                const directions = [
+                    { x: 1, y: 0 }, { x: -1, y: 0 }, 
+                    { x: 0, y: 1 }, { x: 0, y: -1 }
+                ];
+
+                // Count safe adjacent spaces
+                const safeSpaces = directions.filter(dir => {
+                    const newX = (pos.x + dir.x + GRID_WIDTH) % GRID_WIDTH;
+                    const newY = (pos.y + dir.y + GRID_HEIGHT) % GRID_HEIGHT;
+                    return this.isPositionSafe(newX, newY);
+                }).length;
+
+                return safeSpaces;
             }
 
             move() {
