@@ -239,10 +239,11 @@
                 this.snake = snake;
                 this.food = food;
                 this.pathfindingCache = new Map();
+                this.previousPositions = new Set();
             }
 
-            // Memoized safe position check
-            isPositionSafe(x, y) {
+            // Memoized safe position check with advanced safety criteria
+            isPositionSafe(x, y, checkPreviousPositions = true) {
                 const cacheKey = `${x},${y}`;
                 if (this.pathfindingCache.has(cacheKey)) {
                     return this.pathfindingCache.get(cacheKey);
@@ -255,15 +256,20 @@
                 }
 
                 // Check if position is on snake's body
-                const isSafe = !this.snake.body.some(segment => 
+                const isOnSnakeBody = this.snake.body.some(segment => 
                     segment.x === x && segment.y === y
                 );
 
+                // Check if position was previously visited (to prevent loops)
+                const wasVisitedBefore = checkPreviousPositions && 
+                    this.previousPositions.has(`${x},${y}`);
+
+                const isSafe = !isOnSnakeBody && !wasVisitedBefore;
                 this.pathfindingCache.set(cacheKey, isSafe);
                 return isSafe;
             }
 
-            // A* pathfinding algorithm
+            // Advanced pathfinding with multiple strategies
             findShortestPath() {
                 const head = this.snake.body[0];
                 const foodPos = this.food.position;
@@ -271,7 +277,7 @@
                 // Reset cache for each pathfinding attempt
                 this.pathfindingCache.clear();
 
-                // Possible directions with priority
+                // Possible directions with advanced priority calculation
                 const directions = [
                     { x: 1, y: 0, priority: this.calculatePriority(head, foodPos, 1, 0) },   // Right
                     { x: -1, y: 0, priority: this.calculatePriority(head, foodPos, -1, 0) }, // Left
@@ -279,11 +285,14 @@
                     { x: 0, y: -1, priority: this.calculatePriority(head, foodPos, 0, -1) }  // Up
                 ];
 
-                // Find safe paths with advanced filtering
+                // Find safe paths with multiple safety checks
                 const safePaths = directions.filter(dir => {
                     const newX = (head.x + dir.x + GRID_WIDTH) % GRID_WIDTH;
                     const newY = (head.y + dir.y + GRID_HEIGHT) % GRID_HEIGHT;
-                    return this.isPositionSafe(newX, newY);
+                    
+                    // Check safety with and without previous position check
+                    return this.isPositionSafe(newX, newY, true) || 
+                           this.isPositionSafe(newX, newY, false);
                 });
 
                 if (safePaths.length === 0) {
@@ -291,8 +300,23 @@
                     return this.snake.direction;
                 }
 
-                // Sort safe paths by priority and proximity to food
-                return safePaths.sort((a, b) => b.priority - a.priority)[0];
+                // Sort safe paths by priority, considering food proximity and open space
+                const bestPath = safePaths.sort((a, b) => b.priority - a.priority)[0];
+                
+                // Update previous positions to prevent repeated moves
+                const newPos = { 
+                    x: (head.x + bestPath.x + GRID_WIDTH) % GRID_WIDTH, 
+                    y: (head.y + bestPath.y + GRID_HEIGHT) % GRID_HEIGHT 
+                };
+                this.previousPositions.add(`${newPos.x},${newPos.y}`);
+
+                // Limit memory of previous positions
+                if (this.previousPositions.size > this.snake.body.length * 2) {
+                    const oldestPosition = this.previousPositions.values().next().value;
+                    this.previousPositions.delete(oldestPosition);
+                }
+
+                return bestPath;
             }
 
             calculatePriority(head, foodPos, dx, dy) {
@@ -303,9 +327,10 @@
 
                 const distanceToFood = this.calculateDistance(newPos, foodPos);
                 const openSpaceScore = this.calculateOpenSpaceScore(newPos);
+                const loopAvoidanceScore = this.previousPositions.has(`${newPos.x},${newPos.y}`) ? -50 : 0;
 
-                // Combine distance and open space as priority
-                return 100 / (distanceToFood + 1) + openSpaceScore;
+                // Combine distance, open space, and loop avoidance as priority
+                return 100 / (distanceToFood + 1) + openSpaceScore + loopAvoidanceScore;
             }
 
             calculateDistance(pos1, pos2) {
@@ -330,7 +355,7 @@
                 const safeSpaces = directions.filter(dir => {
                     const newX = (pos.x + dir.x + GRID_WIDTH) % GRID_WIDTH;
                     const newY = (pos.y + dir.y + GRID_HEIGHT) % GRID_HEIGHT;
-                    return this.isPositionSafe(newX, newY);
+                    return this.isPositionSafe(newX, newY, true);
                 }).length;
 
                 return safeSpaces;
