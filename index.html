@@ -130,6 +130,19 @@
         const highScoreElement = document.getElementById('high-score');
         const restartBtn = document.getElementById('restart-btn');
 
+        // Game version
+        const GAME_VERSION = '1.5.0'; // Increment this with each significant update
+        const versionElement = document.createElement('div');
+        versionElement.id = 'game-version';
+        versionElement.style.position = 'absolute';
+        versionElement.style.top = '10px';
+        versionElement.style.right = '10px';
+        versionElement.style.color = 'var(--text-color)';
+        versionElement.style.fontFamily = "'Orbitron', sans-serif";
+        versionElement.style.fontSize = '12px';
+        versionElement.style.opacity = '0.7';
+        versionElement.textContent = `v${GAME_VERSION}`;
+
         // Game constants
         const GRID_SIZE = 20;
         const GRID_WIDTH = canvas.width / GRID_SIZE;
