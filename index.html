@@ -375,7 +375,7 @@
                 this.score = 0;
                 this.highScore = localStorage.getItem('snakeHighScore') || 0;
                 this.gameOver = false;
-                this.gameSpeedLevels = [500, 200, 100, 50, 25, 10, 5, 1]; // Slower to faster speeds
+                this.gameSpeedLevels = [500, 200, 100, 50, 25, 10, 5, 1, 0.5, 0.25, 0.1, 0.05, 0.01, 0.005, 0.001]; // Slower to faster speeds
                 this.currentSpeedIndex = 2; // Default to medium speed
                 this.gameSpeed = this.gameSpeedLevels[this.currentSpeedIndex];
                 this.autoMode = 1; // 0: Manual, 1: Smart Auto, 2: Full Auto
