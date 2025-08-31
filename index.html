@@ -456,7 +456,7 @@
                 modeLabel.style.fontFamily = "'Orbitron', sans-serif";
 
                 const modeToggleBtn = document.createElement('button');
-                const modeModes = ['Manual', 'Smart Auto', 'Full Auto'];
+                const modeModes = ['Manual', 'Simple Win', 'Full Auto'];
                 modeToggleBtn.textContent = modeModes[this.autoMode];
                 modeToggleBtn.style.background = 'var(--secondary-color)';
                 modeToggleBtn.style.color = 'var(--bg-color)';
@@ -524,8 +524,8 @@
 
                 // Auto agent movement
                 if (this.autoMode === 1) {
-                    // Smart Auto Mode
-                    this.autoAgent.move();
+                    // Simple Win Mode - Systematic row-by-row traversal
+                    this.simpleWinTraverse();
                 } else if (this.autoMode === 2) {
                     // Full Auto Mode - Systematic screen traversal
                     this.fullAutoTraverse();
@@ -545,12 +545,52 @@
                     this.food = new Food(this.snake);
                 }
 
-                // Check collision only in manual and smart auto modes
-                if (this.autoMode !== 2 && this.snake.checkCollision()) {
+                // Check collision only in manual mode
+                if (this.autoMode === 0 && this.snake.checkCollision()) {
                     this.gameOver = true;
                     this.updateHighScore();
                     this.drawGameOver();
                 }
+            }
+
+            simpleWinTraverse() {
+                const head = this.snake.body[0];
+                const gridWidth = GRID_WIDTH;
+                const gridHeight = GRID_HEIGHT;
+
+                // Determine current row and direction
+                const currentRow = Math.floor(head.y);
+                const isEvenRow = currentRow % 2 === 0;
+
+                // Systematic row-by-row traversal pattern
+                let newDirection;
+                if (isEvenRow) {
+                    // Move right
+                    newDirection = { x: 1, y: 0 };
+                    if (head.x >= gridWidth - 1) {
+                        // Move to next row
+                        newDirection = { x: 0, y: 1 };
+                        
+                        // If reached last row, wrap back to first row
+                        if (head.y >= gridHeight - 1) {
+                            newDirection = { x: 1, y: -gridHeight + 1 };
+                        }
+                    }
+                } else {
+                    // Move left
+                    newDirection = { x: -1, y: 0 };
+                    if (head.x <= 0) {
+                        // Move to next row
+                        newDirection = { x: 0, y: 1 };
+                        
+                        // If reached last row, wrap back to first row
+                        if (head.y >= gridHeight - 1) {
+                            newDirection = { x: -1, y: -gridHeight + 1 };
+                        }
+                    }
+                }
+
+                this.snake.changeDirection(newDirection);
             }
 
             fullAutoTraverse() {
