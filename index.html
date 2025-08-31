@@ -523,8 +523,12 @@
                 if (this.gameOver) return;
 
                 // Auto agent movement
-                if (this.autoMode) {
+                if (this.autoMode === 1) {
+                    // Smart Auto Mode
                     this.autoAgent.move();
+                } else if (this.autoMode === 2) {
+                    // Full Auto Mode - Systematic screen traversal
+                    this.fullAutoTraverse();
                 }
 
                 this.snake.move();
@@ -539,15 +543,44 @@
                     this.score++;
                     scoreElement.textContent = `Score: ${this.score}`;
                     this.food = new Food(this.snake);
-                    this.autoAgent = new AutoAgent(this.snake, this.food);
                 }
 
-                // Check collision
-                if (this.snake.checkCollision()) {
+                // Check collision only in manual and smart auto modes
+                if (this.autoMode !== 2 && this.snake.checkCollision()) {
                     this.gameOver = true;
                     this.updateHighScore();
                     this.drawGameOver();
                 }
+            }
+
+            fullAutoTraverse() {
+                const head = this.snake.body[0];
+                const gridWidth = GRID_WIDTH;
+                const gridHeight = GRID_HEIGHT;
+
+                // Determine current row and direction
+                const currentRow = Math.floor(head.y);
+                const isEvenRow = currentRow % 2 === 0;
+
+                // Systematic traversal pattern
+                let newDirection;
+                if (isEvenRow) {
+                    // Move right
+                    newDirection = { x: 1, y: 0 };
+                    if (head.x >= gridWidth - 1) {
+                        // Move to next row
+                        newDirection = { x: 0, y: 1 };
+                    }
+                } else {
+                    // Move left
+                    newDirection = { x: -1, y: 0 };
+                    if (head.x <= 0) {
+                        // Move to next row
+                        newDirection = { x: 0, y: 1 };
+                    }
+                }
+
+                this.snake.changeDirection(newDirection);
             }
 
             updateHighScore() {
